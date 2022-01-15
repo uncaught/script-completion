@@ -1,0 +1,14 @@
+_sc_script_completion_dir="$(cd "$(dirname "$BASH_SOURCE")"; pwd)"
+_sc_script_completion_alias=${1:-sc}
+_sc_script_completion_config=${2:-.sc.json}
+_sc_script_completion_retriever()
+{
+    local currentWord args completionOptions
+    currentWord="${COMP_WORDS[COMP_CWORD]}"
+    args=("${COMP_WORDS[@]}")
+    completionOptions=$($_sc_script_completion_dir/run.js $_sc_script_completion_config --get-completions "${args[@]}")
+    COMPREPLY=( $(compgen -W "${completionOptions}" -- ${currentWord}) )
+    return 0
+}
+complete -F _sc_script_completion_retriever $_sc_script_completion_alias
+alias $_sc_script_completion_alias="$_sc_script_completion_dir/run.js $_sc_script_completion_config"

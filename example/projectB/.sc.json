@@ -1,0 +1,13 @@
+{
+    "completion": {
+        "app": {
+            "down": {},
+            "up": {
+                "-d": {}
+            }
+        }
+    },
+    "scriptDirs": [
+        "./dev"
+    ]
+}

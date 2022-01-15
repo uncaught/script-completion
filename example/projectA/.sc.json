@@ -1,0 +1,11 @@
+{
+    "completion": {
+        "bar": {
+            "cat": {},
+            "dog": {}
+        }
+    },
+    "scriptDirs": [
+        "./scripts"
+    ]
+}
