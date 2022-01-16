@@ -3,6 +3,7 @@
 const { spawn } = require('child_process');
 const fs = require('fs').promises;
 const { dirname, resolve } = require('path');
+const { debug } = require('./logger.js');
 
 /**
  * @param {string} path 
@@ -59,28 +60,46 @@ async function getScripts(config, configDir) {
     return scripts;
 }
 
+const completionPlugins = {
+    '$$docker-compose': () => require('./plugins/docker-compose.js'),
+};
+
+function getPlugin(cfg) {
+    const pluginKey = Object.keys(cfg).find((key) => completionPlugins[key]);
+    return pluginKey ? [completionPlugins[pluginKey], cfg[pluginKey]] : null;
+}
+
 /**
  * @param {object} config
  * @param {string} configDir
  * @param {string[]} resolvedArgs
+ * @param {string} lastArg
  * @returns {string[]}
  */
-async function getCompletions(config, configDir, resolvedArgs) {
+async function getCompletions(config, configDir, resolvedArgs, lastArg) {
     if (resolvedArgs.length === 0) {
         const scripts = await getScripts(config, configDir);
         return [...scripts.keys()];
     }
 
-    let completion = (config.completion || {})[resolvedArgs[0]] || {};
+    let completion = config.completion || {};
+
     const argLength = resolvedArgs.length;
-    for (let i = 1; i < argLength; i++) {
-        const next = completion[resolvedArgs[i]];
+    for (let i = 0; i < argLength; i++) {
+        const arg = resolvedArgs[i];
+        const next = completion[arg];
         if (next) {
-            completion = next;
+            const plugin = getPlugin(next);
+            if (plugin) {
+                return await plugin[0]()(resolvedArgs.slice(i + 1), lastArg, plugin[1], { config, configDir, allArgs: resolvedArgs });
+            } else {
+                completion = next;
+            }
         } else {
             break;
         }
     }
+
     return Object.keys(completion);
 }
 
@@ -92,14 +111,14 @@ async function run() {
     const configFileName = args.shift();
     const [config, configDir] = await getConfig(configFileName);
 
-    // Debug output to file because bash completion hates stuff in stdout:
-    // await fs.appendFile('./log', `${JSON.stringify({ args })}\n`);
+    // await debug('run', { args, config });
 
     if (args[0] === '--get-completions') {
         args.shift(); //option
         args.shift(); //this script's alias name - provided by the bash completion call
-        args.pop(); //the last (incomplete) word (empty string)
-        const completions = await getCompletions(config, configDir, args);
+        const lastIncompleteArg = args.pop(); //the last (incomplete) word (empty string)
+        const completions = await getCompletions(config, configDir, args, lastIncompleteArg);
+        await debug('completions', completions);
         process.stdout.write(`${completions.join(' ')}`);
         return 0;
     }

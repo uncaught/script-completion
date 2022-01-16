@@ -1,9 +1,8 @@
 {
     "completion": {
         "app": {
-            "down": {},
-            "up": {
-                "-d": {}
+            "$$docker-compose": {
+                "file": "./docker-compose.yml"
             }
         }
     },

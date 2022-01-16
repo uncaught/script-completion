@@ -3,3 +3,5 @@ version: "3"
 services:
   webserver:
     image: httpd:latest
+  database:
+    image: postgres:latest

@@ -56,24 +56,37 @@ The alias `sc` will provide completion for every script name it finds.
 
 Inheriting completion from those scripts is not supported, yet. However, you can define completion manually in the config.
 
-Lets say the `app.sh` script is your docker-compose short cut:
+Lets say the `build.js` script has an option `--watch` and an argument, either `prod` or `dev`, then this would give you completion for those:
+
+```json
+{
+    "completion": {
+        "build": {
+            "--watch": {
+                "prod": {},
+                "dev": {}
+            },
+            "prod": {},
+            "dev": {}
+        }
+    }
+}
+```
+
+A special plugin exists to provide completion for docker-compose. Lets say the `app.sh` is your docker-compose short cut, then configure the location of the docker-compose.yml so that the script can complete your service names:
 
 ```json
 {
     "completion": {
         "app": {
-            "down": {},
-            "exec": {},
-            "logs": {
-                "-f": {}
-            },
-            "up": {
-                "-d": {}
+            "$$docker-compose": {
+                "file": "./docker-compose.yml"
             }
         }
     }
 }
 ```
+
 
 ### Renaming the alias and/or config
 
